@@ -60,19 +60,29 @@ PodcastRoute.get('/episodes/:id', (req, res)=>{
 
 
 // 1 Episode by episodeid
-PodcastRoute.get('/episode/:feedId/:podcastId', (req, res)=>{
+PodcastRoute.get('/episode/:feedId/:podcastId', async(req, res)=>{
     const options = {
         method: 'get',
         headers: generateHeader()
       };
     const {feedId, podcastId}= req.params
     const url = `https://api.podcastindex.org/api/1.0/episodes/byfeedid?id=${feedId}&pretty`;
+    const url2 = `https://api.podcastindex.org/api/1.0/podcasts/byfeedid?id=${feedId}&pretty`
+    let exactResult = {}
     axios(url, options)
     .then(response => {
       const result = response.data.items;
-      const exactResult = result.find(item=>item.id == podcastId)
-      res.send({status: 'ok', data: exactResult});
+      exactResult = result.find(item=>item.id == podcastId)
+      axios(url2, options)
+      .then(response => {
+        const feed = response.data.feed;
+        exactResult.podcast = feed
+        res.send({status: 'ok', data: exactResult});
+      });
+      
     });
+    
+   
 })
 
 
