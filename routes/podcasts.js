@@ -3,6 +3,9 @@ const PodcastRoute = express.Router();
 const fs = require("fs");
 const crypto = require("crypto");
 const axios = require("axios");
+const { doTranscription } = require("../utils/openai");
+const download = require("../utils/download");
+const path = require('path')
 
 const apiKey = "WMCG87GQJE2ESTMPPWWC";
 const apiSecret = "HfJ$QQwJ9hn2aBHKR9Gn$#2WTv8kEkCYfHFqeAv2";
@@ -41,16 +44,17 @@ PodcastRoute.get("/all", (req, res) => {
 });
 
 // All Episodes by feed id
-PodcastRoute.get("/episodes/:id", (req, res) => {
+PodcastRoute.get("/episodes/:feedId", (req, res) => {
   try{
     const options = {
       method: "get",
       headers: generateHeader(),
     };
-    const id = req.params.id;
-    const url = `https://api.podcastindex.org/api/1.0/episodes/byfeedid?id=${id}&pretty`;
+    const {feedId} = req.params;
+    const url = `https://api.podcastindex.org/api/1.0/episodes/byfeedid?id=${feedId}&pretty`;
     axios(url, options).then((response) => {
-      const result = response.data;
+
+      const result = response.data.items
       res.send({ status: "ok", data: result });
     });
   }catch(err){
@@ -69,13 +73,11 @@ PodcastRoute.get("/episode/:feedId/:podcastId", async (req, res) => {
     };
     const { feedId, podcastId } = req.params;
     const url = `https://api.podcastindex.org/api/1.0/episodes/byfeedid?id=${feedId}&pretty`;
-    const url2 = `https://api.podcastindex.org/api/1.0/podcasts/byfeedid?id=${feedId}&pretty`;
     let exactResult = {};
     axios(url, options1).then((response) => {
       const result = response.data.items;
       exactResult = result.find((item) => item.id == podcastId);
-      podcastAuthor(url2, exactResult, res)
-      
+      res.send({ status: "ok", data: exactResult });
     })
     
   }catch(err){
@@ -83,40 +85,48 @@ PodcastRoute.get("/episode/:feedId/:podcastId", async (req, res) => {
   }
 });
 
-// Function: Podcast Author
-
-const podcastAuthor = (url2, exactResult, res) => {
-  const options2 = {
-    method: "get",
-    headers: generateHeader(),
-  };
-  axios(url2, options2).then((response) => {
-    const feed = response.data.feed;
-    exactResult.podcast = feed;
-    
-    const url = exactResult.transcriptUrl;
-    if(url){
-      podcastTranscribe(url, exactResult, res)
-    }else{
-      res.send({ status: "ok", data: exactResult });
-    }
-  })
-}
 
 // Function: Podcast Transcribe
-const podcastTranscribe = (url, exactResult, res) => {
-  const options3 = {
+PodcastRoute.post('/transcription', (req, res)=> {
+  const {transUrl, enclosureUrl} = req.body
+  console.log(transUrl, enclosureUrl);
+  const options = {
     method: "get",
     headers: generateHeader(),
   };
-  axios(url, options3).then((response) => {
-    const result = response.data
-      .replace(/^\d(.+)?/gm, "")
-      .replaceAll("\n", "");
-    exactResult.transcription = result;
-    res.send({ status: "ok", data: exactResult });
-  })
+  if(transUrl){
+    axios(transUrl, options).then((response) => {
+      const result = response.data
+        .replace(/^\d(.+)?/gm, "")
+        .replaceAll("\n", "");
+      
+      res.send({ status: "ok", data: result });
+    })
+  }else{
+    // doTranscription()
+    // .then(result=>result.json())
+    // .then(result=>{
+    //   console.log(result);
+    // })
+    res.send({ status: "ok", data: "No transcription" })
+  }
+ 
+})
+
+
+// Podcast Author
+PodcastRoute.get('/author/:feedId', (req, res)=>{
+  const {feedId} = req.params
+  const url = `https://api.podcastindex.org/api/1.0/podcasts/byfeedid?id=${feedId}&pretty`;
+  const options = {
+    method: "get",
+    headers: generateHeader(),
+  };
   
-}
+  axios(url, options).then((response) => {
+    const feed = response.data.feed
+    res.send({status:'ok', data: feed})
+  })
+})
 
 module.exports = PodcastRoute;
