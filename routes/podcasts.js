@@ -32,8 +32,9 @@ PodcastRoute.get("/all", (req, res) => {
     method: "get",
     headers: generateHeader(),
   };
-  const url = `https://api.podcastindex.org/api/1.0/recent/newfeeds?pretty&max=20`;
-  axios(url, options)
+  const recent = `https://api.podcastindex.org/api/1.0/recent/newfeeds?pretty&max=20`;
+  const trending = 'https://api.podcastindex.org/api/1.0/podcasts/trending?pretty'
+  axios(recent, options)
     .then((response) => {
       const result = response.data;
       res.send({ status: "ok", data: result });
@@ -65,7 +66,7 @@ PodcastRoute.get("/episodes/:feedId", (req, res) => {
 
 
 // 1 Episode by episodeid
-PodcastRoute.get("/episode/:feedId/:podcastId", async (req, res) => {
+PodcastRoute.get("/episode/:feedId/:podcastId",  (req, res) => {
   try{
     const options1 = {
       method: "get",
@@ -86,14 +87,13 @@ PodcastRoute.get("/episode/:feedId/:podcastId", async (req, res) => {
 });
 
 
-// Function: Podcast Transcribe
-PodcastRoute.post('/transcription', (req, res)=> {
-  const {transUrl, enclosureUrl} = req.body
+// Function: Podcast Transcribe 
+PodcastRoute.post('/default-transcription', (req, res)=> {
+  const {transUrl} = req.body
   const options = {
     method: "get",
     headers: generateHeader(),
   };
-  if(transUrl){
     axios(transUrl, options).then((response) => {
       const result = response.data
         .replace(/^\d(.+)?/gm, "")
@@ -101,19 +101,29 @@ PodcastRoute.post('/transcription', (req, res)=> {
       
       res.send({ status: "ok", data: result });
     })
-  }else{
-    const cb = (filePath) => {
-      doTranscription(filePath)
-      .then(result=>{
-        res.send({ status: "ok", data: result.data.text })
-        fs.unlinkSync(filePath)
-      })
-      .catch(err=>{
-        res.send({ status: "ok", data: 'No transcription' })
-      })
-    }
-    download(enclosureUrl, 'test.mp3', cb)
+ 
+})
+// Function: Podcast Transcribe 
+PodcastRoute.post('/ai-transcription', (req, res)=> {
+  const {enclosureUrl} = req.body
+  // const cb = (filePath) => {
+  //   const prompt = 'Transcript it with bullet point'
+  //   doTranscription(filePath, prompt)
+  //   .then(result=>{
+  //     console.log('ai transcription complete');
+  //     res.send({ status: "ok", data: result.data.text })
+  //     fs.unlinkSync(filePath)
+  //   })
+  //   .catch(err=>{
+  //     res.send({ status: "ok", data: 'No transcription' })
+  //   })
+  // }
+  // download(enclosureUrl, 'test.mp3', cb)
+  const cb = (text) =>{
+    console.log('generated text');
+    res.send({ status: "ok", data: text })
   }
+  doTranscription(enclosureUrl, cb)
  
 })
 
