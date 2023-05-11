@@ -5,7 +5,7 @@ const FormData = require('form-data')
 const configuration = new Configuration({
   apiKey: process.env.OPENAI_KEY,
 });
-// const openai = new OpenAIApi(configuration);
+const openai = new OpenAIApi(configuration);
 const apiKey =process.env.OPENAI_KEY
 const doTranscription = (filePath, cb) => {
   axios({
@@ -31,6 +31,7 @@ const doTranscription = (filePath, cb) => {
   });
    
 }
+
 // const doTranscription = (filePath, prompt) => {
 //     return openai.createTranscription(
 //         fs.createReadStream(filePath),
@@ -40,6 +41,15 @@ const doTranscription = (filePath, cb) => {
       
 // }
 
+const doSummarize = (text) =>{
+  return openai.createCompletion({
+    model: "text-davinci-003",
+    prompt: text,
+    max_tokens: 2048,
+    temperature: 0,
+  });
+}
+
 module.exports = {
-    doTranscription
+    doTranscription, doSummarize
 }
