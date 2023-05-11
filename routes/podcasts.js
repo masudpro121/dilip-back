@@ -34,7 +34,7 @@ PodcastRoute.get("/all", (req, res) => {
     headers: generateHeader(),
   };
   const recent = `https://api.podcastindex.org/api/1.0/recent/newfeeds?pretty&max=20`;
-  const trending = 'https://api.podcastindex.org/api/1.0/podcasts/trending?pretty&cat=News'
+  const trending = 'https://api.podcastindex.org/api/1.0/podcasts/trending?pretty'
   axios(trending, options)
     .then((response) => {
       const result = response.data;
@@ -97,12 +97,39 @@ PodcastRoute.post('/default-transcription', (req, res)=> {
   };
     axios(transUrl, options).then((response) => {
       const result = response.data.replace(/^\d(.+)?/gm, "").replaceAll("\n", "");
-      const prompt = 'write a short summarize then 2 line  gap then write some key insights  and again 2 line gap and then write short details about every key insights: '
-      doSummarize(prompt+result)
+      let count = 0;
+      const data = {}
+
+      doSummarize('write a short summary in 50 words: '+result)
       .then(result=>{
+        count++
+        console.log(count, 'count');
         const actualResult = result.data.choices[0].text
-        res.send(JSON.stringify({ status: "ok", data: actualResult }));
+        data.summarize = actualResult
+        if(count==3){
+          res.send({ status: "ok", data });
+        }
       })
+
+      doSummarize("write less than 5 key insights with bullet point for this: "+result)
+      .then(result=>{
+        count++
+        console.log(count, 'count');
+        const actualResult = result.data.choices[0].text
+        data.keyInsights = actualResult
+
+        doSummarize("write details for every key insights, every key insights will be at least 70 words : "+data.keyInsights)
+        .then(result=>{
+          count++
+          console.log(count, 'count');
+          const actualResult = result.data.choices[0].text
+          data.details = actualResult
+          if(count==3){
+            res.send({ status: "ok", data });
+          }
+        })
+      })
+      
       // res.send({ status: "ok", data: "nothing" });
     })
  
