@@ -1,17 +1,24 @@
-const http = require('https');
+const https = require('https');
+const axios = require('axios');
 const fs = require('fs');
-
-const download = function(url, dest, cb) {
-  const file = fs.createWriteStream(dest);
-  const request = http.get(url, function(response) {
-    response.pipe(file);
-    file.on('finish', function() {
-      file.close(cb);  // close() is async, call cb after close completes.
+const path = require('path')
+const download = (audioUrl, fileName, cb) => {
+  const rand = Math.ceil(Math.random()*Date.now())
+  const fileStream = fs.createWriteStream(path.join('storage',rand+fileName));
+  axios({
+    method: 'get',
+    url: audioUrl,
+    responseType: 'stream'
+  }).then(response => {
+    response.data.pipe(fileStream);
+    fileStream.on('finish', () => {
+      cb(fileStream.path)
+      console.log(`${fileName} downloaded successfully`);
     });
-  }).on('error', function(err) { // Handle errors
-    fs.unlink(dest); // Delete the file async. (But we don't check the result)
-    if (cb) cb(err.message);
+  }).catch(error => {
+    console.error(`Error downloading ${fileName}: ${error.message}`);
   });
-};
+}
 
 module.exports = download
+

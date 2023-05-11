@@ -5,9 +5,9 @@ const configuration = new Configuration({
 });
 const openai = new OpenAIApi(configuration);
 
-const doTranscription = (url) => {
+const doTranscription = (filePath) => {
     return openai.createTranscription(
-        fs.createReadStream("https://hanashi.koelab.net/wp-content/uploads/hanashi-721.mp3"),
+        fs.createReadStream(filePath),
         "whisper-1"
       )
       

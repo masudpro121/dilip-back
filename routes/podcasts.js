@@ -32,7 +32,7 @@ PodcastRoute.get("/all", (req, res) => {
     method: "get",
     headers: generateHeader(),
   };
-  const url = `https://api.podcastindex.org/api/1.0/podcasts/trending?pretty`;
+  const url = `https://api.podcastindex.org/api/1.0/recent/newfeeds?pretty&max=20`;
   axios(url, options)
     .then((response) => {
       const result = response.data;
@@ -89,7 +89,6 @@ PodcastRoute.get("/episode/:feedId/:podcastId", async (req, res) => {
 // Function: Podcast Transcribe
 PodcastRoute.post('/transcription', (req, res)=> {
   const {transUrl, enclosureUrl} = req.body
-  console.log(transUrl, enclosureUrl);
   const options = {
     method: "get",
     headers: generateHeader(),
@@ -103,12 +102,17 @@ PodcastRoute.post('/transcription', (req, res)=> {
       res.send({ status: "ok", data: result });
     })
   }else{
-    // doTranscription()
-    // .then(result=>result.json())
-    // .then(result=>{
-    //   console.log(result);
-    // })
-    res.send({ status: "ok", data: "No transcription" })
+    const cb = (filePath) => {
+      doTranscription(filePath)
+      .then(result=>{
+        res.send({ status: "ok", data: result.data.text })
+        fs.unlinkSync(filePath)
+      })
+      .catch(err=>{
+        res.send({ status: "ok", data: 'No transcription' })
+      })
+    }
+    download(enclosureUrl, 'test.mp3', cb)
   }
  
 })
