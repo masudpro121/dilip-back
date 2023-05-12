@@ -4,7 +4,7 @@ const fs = require("fs");
 const crypto = require("crypto");
 const { doTranscription, doSummarize } = require("../utils/openai");
 const download = require("../utils/download");
-const path = require('path')
+const path = require("path");
 const axios = require("axios");
 axios.defaults.maxBodyLength = 50000000;
 
@@ -28,47 +28,52 @@ const generateHeader = () => {
 
 // Get all Trending Podcast
 PodcastRoute.get("/all", (req, res) => {
-  try{
+  try {
     const options = {
-    method: "get",
-    headers: generateHeader(),
-  };
-  const recent = `https://api.podcastindex.org/api/1.0/recent/newfeeds?pretty&max=20`;
-  const trending = 'https://api.podcastindex.org/api/1.0/podcasts/trending?pretty'
-  axios(trending, options)
-    .then((response) => {
+      method: "get",
+      headers: generateHeader(),
+    };
+    const recent = `https://api.podcastindex.org/api/1.0/recent/newfeeds?pretty&max=20`;
+    const trending =
+      "https://api.podcastindex.org/api/1.0/podcasts/trending?pretty";
+    axios(trending, options).then((response) => {
       const result = response.data;
       res.send({ status: "ok", data: result });
-    })
-  }catch(err){
+    });
+  } catch (err) {
     console.log(err.message);
   }
 });
 
 // All Episodes by feed id
 PodcastRoute.get("/episodes/:feedId", (req, res) => {
-  try{
+  try {
     const options = {
       method: "get",
       headers: generateHeader(),
     };
-    const {feedId} = req.params;
+    const { feedId } = req.params;
     const url = `https://api.podcastindex.org/api/1.0/episodes/byfeedid?id=${feedId}&pretty`;
     axios(url, options).then((response) => {
-
-      const result = response.data.items
-      res.send({ status: "ok", data: result });
+      const result = { items: response.data.items };
+      const options2 = {
+        method: "get",
+        headers: generateHeader(),
+      };
+      const url2 = `https://api.podcastindex.org/api/1.0/podcasts/byfeedid?id=${feedId}&pretty`;
+      axios(url2, options2).then((resp) => {
+        result.podcast = resp.data.feed;
+        res.send({ status: "ok", data: result });
+      });
     });
-  }catch(err){
+  } catch (err) {
     console.log(err.message);
   }
 });
 
-
-
 // 1 Episode by episodeid
-PodcastRoute.get("/episode/:feedId/:podcastId",  (req, res) => {
-  try{
+PodcastRoute.get("/episode/:feedId/:podcastId", (req, res) => {
+  try {
     const options1 = {
       method: "get",
       headers: generateHeader(),
@@ -79,86 +84,118 @@ PodcastRoute.get("/episode/:feedId/:podcastId",  (req, res) => {
     axios(url, options1).then((response) => {
       const result = response.data.items;
       exactResult = result.find((item) => item.id == podcastId);
-      res.send({ status: "ok", data: exactResult });
-    })
-    
-  }catch(err){
+
+      const options2 = {
+        method: "get",
+        headers: generateHeader(),
+      };
+      const url2 = `https://api.podcastindex.org/api/1.0/podcasts/byfeedid?id=${feedId}&pretty`;
+      axios(url2, options2).then((resp) => {
+        exactResult.podcast = resp.data.feed;
+        res.send({ status: "ok", data: exactResult });
+      });
+    });
+  } catch (err) {
     console.log(err.message);
   }
 });
 
+// Default Podcast Transcribe
+PodcastRoute.post("/summary", (req, res) => {
+  const { text, type } = req.body;
+  let prompt = ""
+  if(type=="short"){
+    prompt = "Write a summary within 100 words for : "
+  }else if(type=="medium"){
+    prompt = "Write a summary within 300 words for : "
+  }else if(type=="large"){
+    prompt = "Write a summary within 500 words for : "
+  }else{
+    prompt = "Write a summary within 100 words for : "
+  }
+  console.log('called');
+  doSummarize(prompt + text)
+    .then((result) => {
+      const actualResult = result.data.choices[0].text;
+      console.log(actualResult);
+      res.send({ status: "ok", data:actualResult });
+    });
+  // res.send({ status: "ok", data: result});
+});
 
-// Function: Podcast Transcribe 
-PodcastRoute.post('/default-transcription', (req, res)=> {
-  const {transUrl} = req.body
-  const options = {
-    method: "get",
-    headers: generateHeader(),
-  };
-    axios(transUrl, options).then((response) => {
-      const result = response.data.replace(/^\d(.+)?/gm, "").replaceAll("\n", "");
-      let count = 0;
-      const data = {}
+// Backup: Default Podcast Transcribe
+// PodcastRoute.post('/default-transcription', (req, res)=> {
+//   const {transUrl} = req.body
+//   const options = {
+//     method: "get",
+//     headers: generateHeader(),
+//   };
+//     axios(transUrl, options).then((response) => {
+//       const result = response.data.replace(/^\d(.+)?/gm, "").replaceAll("\n", "").split(' ').slice(0,1000).join(' ')
+//       let count = 0;
+//       const data = {}
+//       doSummarize('write a short summary within 50 words: '+result)
+//       // doSummarize('how are you')
+//       .then(result=>{
+//         count++
+//         console.log(count, 'count');
+//         const actualResult = result.data.choices[0].text
+//         data.summarize = actualResult
+//         if(count==3){
+//           res.send({ status: "ok", data });
+//         }
+//       })
 
-      doSummarize('write a short summary in 50 words: '+result)
-      .then(result=>{
-        count++
-        console.log(count, 'count');
-        const actualResult = result.data.choices[0].text
-        data.summarize = actualResult
-        if(count==3){
-          res.send({ status: "ok", data });
-        }
-      })
+//       doSummarize("write less than 5 key insights with bullet point for this: "+result)
+//       // doSummarize("bangladeshi flower")
+//       .then(result=>{
+//         count++
+//         console.log(count, 'count');
+//         const actualResult = result.data.choices[0].text
+//         data.keyInsights = actualResult
 
-      doSummarize("write less than 5 key insights with bullet point for this: "+result)
-      .then(result=>{
-        count++
-        console.log(count, 'count');
-        const actualResult = result.data.choices[0].text
-        data.keyInsights = actualResult
+//         doSummarize("write paragraph for every key insights: "+data.keyInsights)
+//         // doSummarize("5 flower name")
+//         .then(result=>{
+//           count++
+//           console.log(count, 'count');
+//           const actualResult = result.data.choices[0].text
+//           data.details = actualResult
+//           if(count==3){
+//             res.send({ status: "ok", data });
+//           }
+//         })
+//       })
 
-        doSummarize("write details for every key insights, every key insights will be at least 70 words : "+data.keyInsights)
-        .then(result=>{
-          count++
-          console.log(count, 'count');
-          const actualResult = result.data.choices[0].text
-          data.details = actualResult
-          if(count==3){
-            res.send({ status: "ok", data });
-          }
-        })
-      })
-      
-      // res.send({ status: "ok", data: "nothing" });
-    })
- 
-})
+//       // res.send({ status: "ok", data: result});
+//     })
+
+// })
+
 // Ai Transcription
-PodcastRoute.post('/ai-transcription', (req, res)=> {
+PodcastRoute.post("/ai-transcription", (req, res) => {
   // const {enclosureUrl} = req.body
   // const cb = (text) =>{
-    
+
   //   res.send({ status: "ok", data: text })
   // }
   // doTranscription(enclosureUrl, cb)
-  res.send({ status: "ok", data: "Nothing" })
-})
-
+  res.send({ status: "ok", data: "Nothing" });
+});
 
 // Podcast Author
-PodcastRoute.get('/author/:feedId', (req, res)=>{
-  const {feedId} = req.params
+PodcastRoute.get("/author/:feedId", (req, res) => {
+  const { feedId } = req.params;
   const url = `https://api.podcastindex.org/api/1.0/podcasts/byfeedid?id=${feedId}&pretty`;
   const options = {
     method: "get",
     headers: generateHeader(),
   };
-  
+
   axios(url, options).then((response) => {
-    const feed = response.data.feed
-    res.send({status:'ok', data: feed})
-  })
-})
+    const feed = response.data.feed;
+    res.send({ status: "ok", data: feed });
+  });
+});
 
 module.exports = PodcastRoute;
