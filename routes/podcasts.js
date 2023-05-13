@@ -122,6 +122,7 @@ PodcastRoute.post("/summary", (req, res) => {
 });
 
 
+// Transcript by url
 PodcastRoute.post('/transcription-by-url', (req, res)=> {
     const {transUrl} = req.body
     const options = {
@@ -142,45 +143,57 @@ PodcastRoute.post('/details-transcription', (req, res)=> {
     headers: generateHeader(),
   };
     axios(transUrl, options).then((response) => {
-      const result = response.data.replace(/^\d(.+)?/gm, "").replaceAll("\n", "").split(' ').slice(0,1000).join(' ')
+      const transcription = response.data.replace(/^\d(.+)?/gm, "").replaceAll("\n", "").split(' ').slice(0,1000).join(' ')
       let count = 0;
+      let count2=0; let limit2 = 3;
+      
       const data = {}
-      doSummarize('write a short summary within 50 words: '+result)
+      data.titles = []
+      data.detailsOfTitles=[]
+      const shouldResponse = () => {
+        console.log(count, 'count');
+        console.log(count2, 'count2');
+        if(count==3 && count2==limit2){
+          console.log('delivered');
+          res.send({ status: "ok", data});
+        }
+      }
+      doSummarize('write a short summary within 50 words: '+transcription)
       // doSummarize('how are you')
       .then(result=>{
         count++
-        console.log(count, 'count');
         const actualResult = result.data.choices[0].text
         data.summarize = actualResult
-        if(count==3){
-          res.send({ status: "ok", data });
-        }
+        shouldResponse()
+       
       })
 
-      doSummarize("write less than 5 key insights with bullet point for this: "+result)
-      // doSummarize("bangladeshi flower")
+      doSummarize("write 5 key insights with bullet point for this: "+transcription)
       .then(result=>{
         count++
-        console.log(count, 'count');
         const actualResult = result.data.choices[0].text
         data.keyInsights = actualResult
-
-        doSummarize("write paragraph for every key insights: "+data.keyInsights)
-        // doSummarize("5 flower name")
-        .then(result=>{
-          count++
-          console.log(count, 'count');
-          const actualResult = result.data.choices[0].text
-          data.details = actualResult
-          if(count==3){
-            res.send({ status: "ok", data });
-          }
-        })
+        shouldResponse()
       })
 
-      // res.send({ status: "ok", data: result});
-    })
+      doSummarize("write 3 blog title every title will be in a line : "+transcription)
+        .then(result=>{
+          count++
+          const actualResult = result.data.choices[0].text
+          data.titles = actualResult.split('\n').filter(i=>i.length)
+          shouldResponse()
 
+          for(let i=0; i<limit2; i++){
+            doSummarize("write details within 150 words and show it in bullet point  : "+data.titles[i])
+            .then(result=>{
+              count2++
+              const actualResult = result.data.choices[0].text
+              data.detailsOfTitles[i] = actualResult
+              shouldResponse()
+            }) 
+          }
+        })
+    })
 })
 
 
