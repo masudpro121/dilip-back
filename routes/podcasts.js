@@ -113,74 +113,87 @@ PodcastRoute.post("/summary", (req, res) => {
   }else{
     prompt = "Write a summary within 100 words for : "
   }
-  console.log('called');
   doSummarize(prompt + text)
     .then((result) => {
       const actualResult = result.data.choices[0].text;
-      console.log(actualResult);
       res.send({ status: "ok", data:actualResult });
     });
   // res.send({ status: "ok", data: result});
 });
 
-// Backup: Default Podcast Transcribe
-// PodcastRoute.post('/default-transcription', (req, res)=> {
-//   const {transUrl} = req.body
-//   const options = {
-//     method: "get",
-//     headers: generateHeader(),
-//   };
-//     axios(transUrl, options).then((response) => {
-//       const result = response.data.replace(/^\d(.+)?/gm, "").replaceAll("\n", "").split(' ').slice(0,1000).join(' ')
-//       let count = 0;
-//       const data = {}
-//       doSummarize('write a short summary within 50 words: '+result)
-//       // doSummarize('how are you')
-//       .then(result=>{
-//         count++
-//         console.log(count, 'count');
-//         const actualResult = result.data.choices[0].text
-//         data.summarize = actualResult
-//         if(count==3){
-//           res.send({ status: "ok", data });
-//         }
-//       })
 
-//       doSummarize("write less than 5 key insights with bullet point for this: "+result)
-//       // doSummarize("bangladeshi flower")
-//       .then(result=>{
-//         count++
-//         console.log(count, 'count');
-//         const actualResult = result.data.choices[0].text
-//         data.keyInsights = actualResult
+PodcastRoute.post('/transcription-by-url', (req, res)=> {
+    const {transUrl} = req.body
+    const options = {
+      method: "get",
+      headers: generateHeader(),
+    };
+      axios(transUrl, options).then((response) => {
+        const result = response.data.replace(/^\d(.+)?/gm, "")
+        res.send(JSON.stringify({ status: "ok", data: result }));
+      })
+    })
 
-//         doSummarize("write paragraph for every key insights: "+data.keyInsights)
-//         // doSummarize("5 flower name")
-//         .then(result=>{
-//           count++
-//           console.log(count, 'count');
-//           const actualResult = result.data.choices[0].text
-//           data.details = actualResult
-//           if(count==3){
-//             res.send({ status: "ok", data });
-//           }
-//         })
-//       })
+// Backup: Details and Default Podcast Transcribe
+PodcastRoute.post('/details-transcription', (req, res)=> {
+  const {transUrl} = req.body
+  const options = {
+    method: "get",
+    headers: generateHeader(),
+  };
+    axios(transUrl, options).then((response) => {
+      const result = response.data.replace(/^\d(.+)?/gm, "").replaceAll("\n", "").split(' ').slice(0,1000).join(' ')
+      let count = 0;
+      const data = {}
+      doSummarize('write a short summary within 50 words: '+result)
+      // doSummarize('how are you')
+      .then(result=>{
+        count++
+        console.log(count, 'count');
+        const actualResult = result.data.choices[0].text
+        data.summarize = actualResult
+        if(count==3){
+          res.send({ status: "ok", data });
+        }
+      })
 
-//       // res.send({ status: "ok", data: result});
-//     })
+      doSummarize("write less than 5 key insights with bullet point for this: "+result)
+      // doSummarize("bangladeshi flower")
+      .then(result=>{
+        count++
+        console.log(count, 'count');
+        const actualResult = result.data.choices[0].text
+        data.keyInsights = actualResult
 
-// })
+        doSummarize("write paragraph for every key insights: "+data.keyInsights)
+        // doSummarize("5 flower name")
+        .then(result=>{
+          count++
+          console.log(count, 'count');
+          const actualResult = result.data.choices[0].text
+          data.details = actualResult
+          if(count==3){
+            res.send({ status: "ok", data });
+          }
+        })
+      })
+
+      // res.send({ status: "ok", data: result});
+    })
+
+})
+
+
+
 
 // Ai Transcription
 PodcastRoute.post("/ai-transcription", (req, res) => {
-  // const {enclosureUrl} = req.body
-  // const cb = (text) =>{
+  const {enclosureUrl} = req.body
+  const cb = (text) =>{
 
-  //   res.send({ status: "ok", data: text })
-  // }
-  // doTranscription(enclosureUrl, cb)
-  res.send({ status: "ok", data: "Nothing" });
+    res.send({ status: "ok", data: text })
+  }
+  doTranscription(enclosureUrl, cb)
 });
 
 // Podcast Author
