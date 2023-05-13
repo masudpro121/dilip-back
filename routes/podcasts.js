@@ -104,7 +104,9 @@ PodcastRoute.get("/episode/:feedId/:podcastId", (req, res) => {
 PodcastRoute.post("/summary", (req, res) => {
   const { text, type } = req.body;
   let prompt = ""
-  if(type=="short"){
+  if(type=="little"){
+    prompt = "Write a summary within 30 words for : "
+  }else if(type=="short"){
     prompt = "Write a summary within 100 words for : "
   }else if(type=="medium"){
     prompt = "Write a summary within 300 words for : "
