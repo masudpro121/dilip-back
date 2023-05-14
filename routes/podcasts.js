@@ -6,7 +6,7 @@ const { doTranscription, doSummarize } = require("../utils/openai");
 const download = require("../utils/download");
 const path = require("path");
 const axios = require("axios");
-axios.defaults.maxBodyLength = 50000000;
+axios.defaults.maxBodyLength = 50000000000;
 
 const apiKey = "WMCG87GQJE2ESTMPPWWC";
 const apiSecret = "HfJ$QQwJ9hn2aBHKR9Gn$#2WTv8kEkCYfHFqeAv2";
@@ -115,6 +115,7 @@ PodcastRoute.post("/summary", (req, res) => {
   }else{
     prompt = "Write a summary within 100 words for : "
   }
+
   doSummarize(prompt + text)
     .then((result) => {
       const actualResult = result.data.choices[0].text;
@@ -204,9 +205,22 @@ PodcastRoute.post('/details-transcription', (req, res)=> {
 // Ai Transcription
 PodcastRoute.post("/ai-transcription", (req, res) => {
   const {enclosureUrl} = req.body
-  const cb = (text) =>{
-
-    res.send({ status: "ok", data: text })
+  let summarizeList=[]
+  let count = 0;
+  const cb = (transcriptionsList) =>{
+    console.log(transcriptionsList, 'done transcripting');
+    // transcriptionsList.forEach((t,i)=>{
+    //   doSummarize("write a headline inside this syntax  <Headline></Headline> and then Make a Compressed Narrated summarize to the next line: " + t)
+    //   .then((result) => {
+    //     count++
+    //     const actualResult = result.data.choices[0].text;
+    //     summarizeList.push(actualResult)
+    //     console.log('Summarized ', count);
+    //     if(summarizeList.length == count){
+    //       res.send({ status: "ok", data: summarizeList })
+    //     }
+    //   });
+    // })
   }
   doTranscription(enclosureUrl, cb)
 });

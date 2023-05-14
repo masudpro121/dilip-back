@@ -6,7 +6,7 @@ const cors = require('cors')
 const PodcastRoute = require('./routes/podcasts')
 const PORT = process.env.PORT || 8000
 const app = express()
-// app.set('server.timeout', 6000000);
+app.set('server.timeout', 6000000);
 app.use(cors())
 app.use(express.json())
 app.use('/podcast', PodcastRoute)
@@ -18,10 +18,12 @@ app.listen(PORT, ()=>{
 
 process.on('uncaughtException', (err, origin) => {
   console.error(`Caught exception: ${err}\nException origin: ${origin}`);
+  console.log(err);
 });
 
 process.on('unhandledRejection', (err, promise) => {
   console.error(`Unhandled rejection: ${err}\nPromise: ${promise}`);
+  // console.log(err);
 });
 
 // Graceful shutdown
