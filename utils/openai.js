@@ -17,34 +17,31 @@ const apiKey = process.env.OPENAI_KEY;
 
 const doTranscription = (url, cb) => {
   // const paths2=['965723078066-chunk-0.mp3', '965723078066-chunk-1.mp3']
-  const mypath = path.join()
   
-  // const downloaded = async (paths) => {
-  //   let i=0;
+  const downloaded =  (pa) => {
+    console.log(pa, 'paths');
+    let i=0;
+    const paths = pa.map((p)=>fs.createReadStream(path.join("storage", p)))
+    let transcriptions = [];
 
-  //   let transcriptions = [];
+    function loopIt(){
+      openai.createTranscription(paths[i],"whisper-1")
+        .then((res) => {
+          transcriptions[i] = res.data.text;
+          i++;
+          if(i<paths.length){
+            loopIt()
+          }
+          if (paths.length == i) {
+            cb(transcriptions)
+          }
+        });
 
-  //   function loopIt(){
-  //     openai.createTranscription(fs.createReadStream(path.join("storage", paths[i])),"whisper-1")
-  //       .then((res) => {
-  //         transcriptions[i] = res.data.text;
-  //         console.log(res.data.text, paths[i]);
-  //         i++;
-  //         if(i<paths.length){
-  //           loopIt()
-  //         }
-  //         if (paths.length == i) {
-  //           console.log("transcription done");
-  //           // cb(transcriptions)
-  //         }
-  //       });
-
-  //   }
-  //   loopIt()
-  // };
- 
-  download(url, ()=>{});
-  // download(url, downloaded);
+    }
+    loopIt()
+  };
+  // downloaded([ 'o-752939142096-chunk-0.mp3', 'o-1463408083808-chunk-1.mp3' ] )
+  download(url, downloaded);
 };
 
 // const doTranscription = (filePath, prompt) => {

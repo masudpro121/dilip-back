@@ -18,12 +18,12 @@ app.listen(PORT, ()=>{
 
 process.on('uncaughtException', (err, origin) => {
   console.error(`Caught exception: ${err}\nException origin: ${origin}`);
-  console.log(err);
+  // console.log(err);
 });
 
 process.on('unhandledRejection', (err, promise) => {
   console.error(`Unhandled rejection: ${err}\nPromise: ${promise}`);
-  // console.log(err);
+  console.log(err);
 });
 
 // Graceful shutdown

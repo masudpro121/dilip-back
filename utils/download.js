@@ -41,7 +41,7 @@ async function download(url, cb) {
   let chunkIndex = 0;
   let fileName = `${randomTime}-chunk-${chunkIndex}.mp3`
   let writeStream = fs.createWriteStream(path.join('storage',fileName));
-  chunkPaths.push(fileName)
+  chunkPaths.push("o-"+fileName)
 
   response.data.on('data', (chunk) => {
     let chunkSize = chunk.length;
@@ -54,7 +54,7 @@ async function download(url, cb) {
       chunkManager(fileName)
       chunkIndex++;
       fileName=`${randomTime}-chunk-${chunkIndex}.mp3`
-      chunkPaths.push(fileName)
+      chunkPaths.push("o-"+fileName)
       if (chunkIndex < totalChunks) {
         writeStream = fs.createWriteStream(path.join('storage',fileName));
        
@@ -64,9 +64,11 @@ async function download(url, cb) {
 
   response.data.on('end', () => {
     writeStream.end();
-    chunkManager(fileName)
+    const isChunkDone=()=>{
+      cb(chunkPaths)
+    }
+    chunkManager(fileName, isChunkDone)
     console.log('Audio file downloaded successfully.');
-    cb(chunkPaths)
   });
 }
 
