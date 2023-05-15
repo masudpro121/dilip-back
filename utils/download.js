@@ -51,7 +51,7 @@ async function download(url, cb) {
     if (offset >= CHUNK_SIZE) {
       offset = 0;
       writeStream.end();
-      chunkManager(fileName)
+      chunkManager(fileName, chunkIndex)
       chunkIndex++;
       fileName=`${randomTime}-chunk-${chunkIndex}.mp3`
       // chunkPaths.push("o-"+fileName)
@@ -67,7 +67,7 @@ async function download(url, cb) {
     const isChunkDone=(paths)=>{
       cb(paths)
     }
-    chunkManager(fileName, isChunkDone)
+    chunkManager(fileName, chunkIndex, isChunkDone)
     console.log('Audio file downloaded successfully.');
   });
 }

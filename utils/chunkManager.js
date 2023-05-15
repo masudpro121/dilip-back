@@ -5,7 +5,7 @@ const ffmpegPath = 'C:/PATH_Environments/ffmpeg.exe';
 const path = require('path')
 // Promisify fs.readFile function
 let outputPaths = []
-async function chunkManager(filename, isChunkDone) {
+async function chunkManager(filename, index, isChunkDone) {
     
     // input file path
     const inputPath = path.join('storage', filename);
@@ -21,12 +21,13 @@ const args = [
   
   ffmpeg.on('close', (code) => {
     if (code === 0) {
-      outputPaths.push(outputPath)
+      outputPaths[index]=outputPath
       console.log(outputPaths);
       if(isChunkDone){
         console.log('chunk done');
         setTimeout(()=>{
-            isChunkDone(outputPaths)
+          isChunkDone(outputPaths)
+          outputPaths[index]=outputPath
         },1000)
       }
       
