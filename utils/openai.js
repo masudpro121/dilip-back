@@ -25,21 +25,26 @@ const doTranscription = (url, cb) => {
     function loopIt(){
       openai.createTranscription(paths[i],"whisper-1",undefined, "vtt")
         .then((res) => {
-          const mytext = res.data.match(/^[a-zA-Z].*/gim).join('\n').replace('WEBVTT','')
-          const timestamp = res.data.match(/^[\d].*/gim)
+          const mytext = res.data?.match(/^[a-zA-Z].*/gim).join(' ').replace('WEBVTT','')
+          const timestamp = res.data?.match(/^[\d].*/gim)
           // const startedTime = timestamp[0].match(/(...)(.....)/)[2]
-          const endTime = timestamp[timestamp.length-1].match(/(--> 00:)(.*)(.000)$/)[2]
-          const endInSecond = Math.round(Number(endTime.replace(":","."))*60)
-          console.log(endInSecond,'endtime');
-          // console.log('transcription done, ', pa[i]);
-          // transcriptions[i] = res.data.text;
-          // i++;
-          // if(i<paths.length){
-          //   loopIt()
-          // }
-          // if (paths.length == i) {
-          //   cb(transcriptions)
-          // }
+          if(res.data && timestamp){
+            const endTime = timestamp[timestamp.length-1].match(/(--> 00:)(.*)([.].*)/)[2]
+            const endInSecond = Math.round(Number(endTime.replace(":","."))*60)
+            console.log(endInSecond,'endtime');
+            transcriptions[i] = {text:mytext, endTime:endInSecond}
+          }
+          i++;
+          if(i<paths.length){
+            loopIt()
+          }
+          if (paths.length == i) {
+            const filtered = transcriptions.filter(tr=>tr)
+            console.log(transcriptions.length, 'transcription length');
+            console.log(filtered.length, 'filtered length');
+
+            cb(filtered)
+          }
         });
     }
     loopIt()
@@ -107,3 +112,5 @@ module.exports = {
   doTranscription,
   doSummarize,
 };
+
+

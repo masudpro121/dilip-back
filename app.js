@@ -23,7 +23,7 @@ process.on('uncaughtException', (err, origin) => {
 
 process.on('unhandledRejection', (err, promise) => {
   console.error(`Unhandled rejection: ${err}\nPromise: ${promise}`);
-  console.log(err);
+  // console.log(err);
 });
 
 // Graceful shutdown
