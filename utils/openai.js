@@ -19,7 +19,6 @@ const doTranscription = (url, cb) => {
   // const paths2=['965723078066-chunk-0.mp3', '965723078066-chunk-1.mp3']
   
   const downloaded =  (pa) => {
-    console.log(pa, 'paths');
     let i=0;
     const paths = pa.map((p)=>fs.createReadStream(p))
     let transcriptions = [];

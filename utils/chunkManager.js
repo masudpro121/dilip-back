@@ -26,8 +26,8 @@ const args = [
       if(isChunkDone){
         console.log('chunk done');
         setTimeout(()=>{
-          isChunkDone(outputPaths)
-          outputPaths[index]=outputPath
+          isChunkDone(outputPaths.filter(i=>i))
+          outputPaths=[]
         },1000)
       }
       
