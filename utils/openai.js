@@ -21,12 +21,13 @@ const doTranscription = (url, cb) => {
   const downloaded =  (pa) => {
     console.log(pa, 'paths');
     let i=0;
-    const paths = pa.map((p)=>fs.createReadStream(path.join("storage", p)))
+    const paths = pa.map((p)=>fs.createReadStream(p))
     let transcriptions = [];
 
     function loopIt(){
       openai.createTranscription(paths[i],"whisper-1")
         .then((res) => {
+          console.log('transcription done, ', pa[i]);
           transcriptions[i] = res.data.text;
           i++;
           if(i<paths.length){

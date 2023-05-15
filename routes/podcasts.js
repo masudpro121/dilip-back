@@ -210,7 +210,7 @@ PodcastRoute.post("/ai-transcription", (req, res) => {
   const cb = (transcriptionsList) =>{
     console.log( 'start summarizing');
     transcriptionsList.forEach((t,i)=>{
-      doSummarize("write a headline inside this syntax <Headline></Headline> and then Make a highly Compressed highly Narrated summarize inside this syntax <Summarize></Summarize> and then make a summary within 20 words inside <Short></Short> and then make a summary within 50 words inside <Medium></Medium> and then make a summary within 100 words inside <Long></Long>: " + t)
+      doSummarize("write a headline inside this syntax <Headline></Headline> and then Make a highly Compressed highly Narrated summarize inside this syntax <Summarize></Summarize> and then make a summary within 20 words inside <Short></Short> and then make a summary within 50 words inside <Medium></Medium> and then make a summary within 100 words inside <Large></Large>: " + t)
       .then((result) => {
         count++
         const actualResult = result.data.choices[0].text;

@@ -4,7 +4,7 @@ const ffmpegPath = 'C:/PATH_Environments/ffmpeg.exe';
 
 const path = require('path')
 // Promisify fs.readFile function
-
+let outputPaths = []
 async function chunkManager(filename, isChunkDone) {
     
     // input file path
@@ -21,10 +21,12 @@ const args = [
   
   ffmpeg.on('close', (code) => {
     if (code === 0) {
-      console.log('Audio encoding complete!');
+      outputPaths.push(outputPath)
+      console.log(outputPaths);
       if(isChunkDone){
+        console.log('chunk done');
         setTimeout(()=>{
-            isChunkDone()
+            isChunkDone(outputPaths)
         },1000)
       }
       

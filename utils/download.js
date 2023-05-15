@@ -27,7 +27,7 @@ const chunkManager = require('./chunkManager');
 const CHUNK_SIZE = 1 * 1024 * 1024; 
 
 async function download(url, cb) {
-  const chunkPaths = []
+  // const chunkPaths = []
   const response = await axios({
     url,
     method: 'GET',
@@ -41,7 +41,7 @@ async function download(url, cb) {
   let chunkIndex = 0;
   let fileName = `${randomTime}-chunk-${chunkIndex}.mp3`
   let writeStream = fs.createWriteStream(path.join('storage',fileName));
-  chunkPaths.push("o-"+fileName)
+  // chunkPaths.push("o-"+fileName)
 
   response.data.on('data', (chunk) => {
     let chunkSize = chunk.length;
@@ -54,7 +54,7 @@ async function download(url, cb) {
       chunkManager(fileName)
       chunkIndex++;
       fileName=`${randomTime}-chunk-${chunkIndex}.mp3`
-      chunkPaths.push("o-"+fileName)
+      // chunkPaths.push("o-"+fileName)
       if (chunkIndex < totalChunks) {
         writeStream = fs.createWriteStream(path.join('storage',fileName));
        
@@ -64,8 +64,8 @@ async function download(url, cb) {
 
   response.data.on('end', () => {
     writeStream.end();
-    const isChunkDone=()=>{
-      cb(chunkPaths)
+    const isChunkDone=(paths)=>{
+      cb(paths)
     }
     chunkManager(fileName, isChunkDone)
     console.log('Audio file downloaded successfully.');
