@@ -3,7 +3,6 @@ const ffmpeg = require("fluent-ffmpeg");
 const axios = require("axios");
 axios.defaults.maxBodyLength = 500000;
 const path = require("path");
-
 const fs = require("fs");
 const FormData = require("form-data");
 const download = require("./download");
@@ -18,30 +17,35 @@ const apiKey = process.env.OPENAI_KEY;
 const doTranscription = (url, cb) => {
   // const paths2=['965723078066-chunk-0.mp3', '965723078066-chunk-1.mp3']
   
-  const downloaded =  (pa) => {
+  const transcripting =  (pa) => {
     let i=0;
     const paths = pa.map((p)=>fs.createReadStream(p))
     let transcriptions = [];
 
     function loopIt(){
-      openai.createTranscription(paths[i],"whisper-1")
+      openai.createTranscription(paths[i],"whisper-1",undefined, "vtt")
         .then((res) => {
-          console.log('transcription done, ', pa[i]);
-          transcriptions[i] = res.data.text;
-          i++;
-          if(i<paths.length){
-            loopIt()
-          }
-          if (paths.length == i) {
-            cb(transcriptions)
-          }
+          const mytext = res.data.match(/^[a-zA-Z].*/gim).join('\n').replace('WEBVTT','')
+          const timestamp = res.data.match(/^[\d].*/gim)
+          // const startedTime = timestamp[0].match(/(...)(.....)/)[2]
+          const endTime = timestamp[timestamp.length-1].match(/(--> 00:)(.*)(.000)$/)[2]
+          const endInSecond = Math.round(Number(endTime.replace(":","."))*60)
+          console.log(endInSecond,'endtime');
+          // console.log('transcription done, ', pa[i]);
+          // transcriptions[i] = res.data.text;
+          // i++;
+          // if(i<paths.length){
+          //   loopIt()
+          // }
+          // if (paths.length == i) {
+          //   cb(transcriptions)
+          // }
         });
-
     }
     loopIt()
   };
-  // downloaded([ 'o-752939142096-chunk-0.mp3', 'o-1463408083808-chunk-1.mp3' ] )
-  download(url, downloaded);
+  // transcripting([ 'o-752939142096-chunk-0.mp3', 'o-1463408083808-chunk-1.mp3' ] )
+  download(url, transcripting);
 };
 
 // const doTranscription = (filePath, prompt) => {
