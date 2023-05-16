@@ -217,9 +217,24 @@ PodcastRoute.post("/ai-transcription", (req, res) => {
         summarizeList[i]={text:actualResult, endTime: t.endTime}
         console.log('Summarized ', count);
         if(transcriptionsList.length == count){
-          res.send({ status: "ok", data: summarizeList })
+          // res.send({ status: "ok", data: summarizeList })
+          const texts = summarizeList.map(tr=>{
+            return tr.text.match(/^(<Short>)(.+)(<\/Short>$)/gm)[0].replaceAll(/(<Short>)|(<\/Short>)/g, '')
+          })
+          const smallSummary = texts.join(" ").split(" ").slice(0,1300).join(" ")
+          doSummarize(`write a summary within 40 words inside this syntax <Sum></Sum> and then write ${Math.ceil(smallSummary.length/100)} key insights in  bullet point inside this syntax <Insight></Insight>:  `+smallSummary)
+          .then(sumandkey=>{
+            console.log('summary and key insight');
+            const summaryAndKeyInsights = sumandkey.data.choices[0].text
+            res.send({ status: "ok", data: {summarizeList, summaryAndKeyInsights} })
+          })
         }
-      });
+      })
+      .catch(err=>{
+        count++
+        console.log( 'error summarizing');
+        console.log(err)
+      })
     })
   }
   doTranscription(enclosureUrl, cb)
