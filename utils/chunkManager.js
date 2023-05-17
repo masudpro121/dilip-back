@@ -4,8 +4,8 @@ const ffmpegPath = "C:/PATH_Environments/ffmpeg.exe";
 
 const path = require("path");
 // Promisify fs.readFile function
-let outputPaths = [];
-async function chunkManager(filename, index, isChunkDone) {
+// let outputPaths = [];
+async function chunkManager(filename, index, outputPaths, isChunkDone) {
   // input file path
   const inputPath = path.join("storage", filename);
   const outputPath = path.join("storage", "o-" + filename);

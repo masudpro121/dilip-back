@@ -209,15 +209,21 @@ PodcastRoute.post("/ai-transcription", (req, res) => {
   let count = 0;
   const cb = (transcriptionsList) =>{
     console.log( 'start summarizing');
+    
     transcriptionsList.forEach((t,i)=>{
-      doSummarize("write a headline inside this syntax <Headline></Headline> and then Make a highly Compressed highly Narrated summarize inside this syntax <Summarize></Summarize> and then make a summary within 20 words inside <Short></Short> and then make a summary within 50 words inside <Medium></Medium> and then make a summary within 100 words inside <Large></Large>: " + t.text)
+      let multiply = 1
+      if(t.text>1000){
+        multiply = 3
+      }else if(t.text>500){
+        multiply = 2
+      }
+      doSummarize(`write a headline inside this syntax <Headline></Headline> and then Make a highly Compressed highly Narrated summarize inside this syntax <Summarize></Summarize> and then make a summary within ${20*multiply} words inside <Short></Short> and then make a summary within ${50*multiply} words inside <Medium></Medium> and then make a summary within ${100*multiply} words inside <Large></Large>: ` + t.text)
       .then((result) => {
         count++
         const actualResult = result.data.choices[0].text;
         summarizeList[i]={text:actualResult, endTime: t.endTime}
         console.log('Summarized ', count);
         if(transcriptionsList.length == count){
-          // res.send({ status: "ok", data: summarizeList })
           const texts = summarizeList.map(tr=>{
             return tr.text.match(/^(<Short>)(.+)(<\/Short>$)/gm)[0].replaceAll(/(<Short>)|(<\/Short>)/g, '')
           })

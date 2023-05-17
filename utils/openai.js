@@ -7,7 +7,6 @@ const fs = require("fs");
 const FormData = require("form-data");
 const download = require("./download");
 const { log } = require("console");
-const chunkManager = require("./chunkManager");
 const configuration = new Configuration({
   apiKey: process.env.OPENAI_KEY,
 });
