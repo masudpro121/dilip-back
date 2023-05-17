@@ -13,7 +13,7 @@ const configuration = new Configuration({
 const openai = new OpenAIApi(configuration);
 const apiKey = process.env.OPENAI_KEY;
 
-const doTranscription = (url, cb) => {
+const doTranscription = (url, afterTranscription) => {
   // const paths2=['965723078066-chunk-0.mp3', '965723078066-chunk-1.mp3']
   
   const transcripting =  (pa) => {
@@ -42,7 +42,26 @@ const doTranscription = (url, cb) => {
             console.log(transcriptions.length, 'transcription length');
             console.log(filtered.length, 'filtered length');
 
-            cb(filtered)
+          afterTranscription(filtered)
+          pa.forEach(filePath=>{
+            fs.unlink(filePath, (err) => {
+              if (err) {
+                console.error('Error deleting file:', err);
+              } else {
+                console.log('File deleted successfully');
+              }
+            });
+          })
+          pa.forEach(file=>{
+            const filePath = path.join('storage', path.parse(file).base.replace("o-",""))
+            fs.unlink(filePath, (err) => {
+              if (err) {
+                console.error('Error deleting file:', err);
+              } else {
+                console.log('File deleted successfully');
+              }
+            });
+          })
           }
         });
     }
